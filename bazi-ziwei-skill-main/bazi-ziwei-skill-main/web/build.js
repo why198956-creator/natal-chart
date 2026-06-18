@@ -5,7 +5,6 @@ require('esbuild').build({
   bundle: true,
   platform: 'browser',
   format: 'iife',
-  globalName: 'BaziCalc',
   outfile: path.join(__dirname, 'bundle.js'),
   minify: true,
   logLevel: 'info',
