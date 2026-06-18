@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>八字紫微排盤 · 玲二工作室</title>
+<style>
+:root {
+  --paper: #f5f1e8;
+  --paper-deep: #ebe5d5;
+  --paper-card: #faf6ec;
+  --ink: #2b2825;
+  --ink-soft: #6b6660;
+  --ink-faint: #a8a298;
+  --vermillion: #c1432f;
+  --vermillion-deep: #8e2f20;
+  --azure: #2e6da4;
+  --jade: #4a7c4e;
+  --gold: #b8860b;
+  --line: #8b8378;
+  --line-soft: #c4bdb0;
+  --line-faint: #e0d9c8;
+  --warn: #c97c3a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Noto Serif TC", "Source Han Serif TC", "STSong", "SimSun", serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+body {
+  min-height: 100vh;
+  padding: 24px 16px;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(180,160,130,.07), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(180,160,130,.05), transparent 45%);
+}
+.mono { font-family: "Courier New", monospace; }
+
+/* ─── LAYOUT ─── */
+.wrap { max-width: 900px; margin: 0 auto; }
+
+/* ─── HEADER ─── */
+.site-header {
+  text-align: center;
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 28px;
+}
+.site-header h1 {
+  font-size: 22px;
+  letter-spacing: .15em;
+  color: var(--vermillion-deep);
+}
+.site-header p {
+  color: var(--ink-soft);
+  font-size: 12px;
+  margin-top: 6px;
+  letter-spacing: .06em;
+}
+
+/* ─── FORM ─── */
+.form-card {
+  background: var(--paper-card);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+.form-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--ink-soft);
+  letter-spacing: .1em;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-faint);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px 20px;
+}
+.field label {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+  letter-spacing: .06em;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus { border-color: var(--vermillion); }
+.field input[type=number]::-webkit-inner-spin-button { opacity: .4; }
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn-submit {
+  background: var(--vermillion);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 9px 28px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-submit:hover { background: var(--vermillion-deep); }
+.btn-submit:disabled { background: var(--ink-faint); cursor: default; }
+.tip { font-size: 11px; color: var(--ink-faint); }
+
+/* ─── SPINNER ─── */
+#spinner {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  letter-spacing: .06em;
+}
+
+/* ─── ERROR ─── */
+#error-box {
+  display: none;
+  background: #fdf0ee;
+  border: 1px solid #e8b0a8;
+  border-radius: 4px;
+  padding: 14px 18px;
+  color: var(--vermillion-deep);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* ─── RESULT ─── */
+#result { display: none; }
+
+.section {
+  background: var(--paper-card);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.section-head {
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--ink-soft);
+  letter-spacing: .12em;
+}
+.section-body { padding: 16px; }
+
+/* ─── META INFO ─── */
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px 24px;
+}
+.meta-row { display: flex; gap: 8px; font-size: 13px; }
+.meta-label { color: var(--ink-soft); white-space: nowrap; }
+.meta-val { color: var(--ink); }
+
+/* ─── BAZI PILLARS ─── */
+.pillar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pillar-table th {
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: .06em;
+  font-weight: normal;
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--line-faint);
+  background: var(--paper-deep);
+}
+.pillar-table td {
+  text-align: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line-faint);
+  border-right: 1px solid var(--line-faint);
+  vertical-align: top;
+}
+.pillar-table td:last-child { border-right: none; }
+.pillar-table tr:last-child td { border-bottom: none; }
+.gan-char {
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.zhi-char {
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--vermillion-deep);
+}
+.shishen-tag {
+  display: inline-block;
+  font-size: 10px;
+  background: var(--paper-deep);
+  border: 1px solid var(--line-faint);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+.daymaster-tag {
+  background: var(--vermillion);
+  color: #fff;
+  border-color: var(--vermillion);
+}
+.small-text { font-size: 11px; color: var(--ink-soft); }
+.canggan-list { font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+
+/* ─── 五行 ─── */
+.wuxing-bars { display: flex; flex-direction: column; gap: 7px; }
+.wuxing-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.wuxing-name { width: 20px; text-align: center; }
+.wuxing-bar-wrap { flex: 1; background: var(--line-faint); border-radius: 2px; height: 8px; }
+.wuxing-bar { height: 8px; border-radius: 2px; transition: width .4s; }
+.wx-木 { background: #4a7c4e; }
+.wx-火 { background: #c1432f; }
+.wx-土 { background: #b8860b; }
+.wx-金 { background: #7a8b9a; }
+.wx-水 { background: #2e6da4; }
+.wuxing-count { width: 20px; text-align: right; color: var(--ink-soft); }
+.wuxing-status { font-size: 11px; color: var(--ink-faint); width: 36px; }
+
+.core-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.core-item { }
+.core-label { font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; letter-spacing: .06em; }
+.core-val { font-size: 14px; color: var(--ink); }
+.core-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+
+.confidence-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.conf-高 { background: var(--jade); }
+.conf-中 { background: var(--gold); }
+.conf-低 { background: var(--warn); }
+
+/* ─── DAYUN ─── */
+.dayun-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dayun-item {
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 8px 12px;
+  min-width: 90px;
+  text-align: center;
+  background: var(--paper);
+}
+.dayun-item.current {
+  border-color: var(--vermillion);
+  background: #fdf0ee;
+}
+.dayun-gz { font-size: 16px; letter-spacing: .05em; }
+.dayun-range { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+.dayun-ss { font-size: 10px; color: var(--ink-faint); }
+.dayun-cur-label {
+  font-size: 9px;
+  background: var(--vermillion);
+  color: #fff;
+  padding: 0 4px;
+  border-radius: 2px;
+  margin-bottom: 3px;
+  display: inline-block;
+}
+
+/* ─── ZIWEI GONGS ─── */
+.palace-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, auto);
+  gap: 1px;
+  background: var(--line-faint);
+  border: 1px solid var(--line-soft);
+}
+.palace-cell {
+  background: var(--paper-card);
+  padding: 10px 8px;
+  min-height: 90px;
+}
+.palace-cell.center-hidden {
+  background: var(--paper-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  font-size: 11px;
+  letter-spacing: .08em;
+}
+.palace-cell.palace-ming { border: 2px solid var(--vermillion); }
+.palace-cell.palace-current { background: #f8f2e0; }
+.palace-ganzhi { font-size: 10px; color: var(--ink-faint); letter-spacing: .04em; }
+.palace-name { font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+.palace-main { font-size: 13px; color: var(--ink); line-height: 1.4; }
+.palace-aux { font-size: 10px; color: var(--ink-soft); margin-top: 3px; }
+.palace-daxian { font-size: 10px; color: var(--ink-faint); margin-top: 3px; }
+.shen-badge {
+  display: inline-block;
+  font-size: 9px;
+  background: var(--azure);
+  color: #fff;
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+.sihua-禄 { color: var(--jade); }
+.sihua-权 { color: var(--vermillion); }
+.sihua-科 { color: var(--azure); }
+.sihua-忌 { color: var(--ink-faint); text-decoration: line-through; }
+.sihua-tag { font-size: 8px; vertical-align: super; }
+
+/* ─── LIUNIAN ─── */
+.liunian-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.liunian-table th {
+  background: var(--paper-deep);
+  padding: 5px 10px;
+  font-weight: normal;
+  color: var(--ink-soft);
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--line-faint);
+}
+.liunian-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line-faint);
+  text-align: center;
+}
+.liunian-table tr.current td { background: #fdf0ee; color: var(--vermillion-deep); }
+
+/* ─── FOOTER ─── */
+.site-footer {
+  text-align: center;
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-faint);
+  color: var(--ink-faint);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 600px) {
+  .core-grid { grid-template-columns: 1fr; }
+  .palace-cell { min-height: 70px; padding: 6px 5px; }
+  .palace-main { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="site-header">
+  <h1>八字紫微排盤</h1>
+  <p>輸入生辰八字，即時計算命盤 · 玲二工作室算法測驗</p>
+</header>
+
+<div class="form-card">
+  <div class="form-title">生辰資料</div>
+  <form id="birth-form">
+    <div class="form-grid">
+      <div class="field">
+        <label>年（西元）</label>
+        <input type="number" id="f-year" value="2000" min="1900" max="2100" required>
+      </div>
+      <div class="field">
+        <label>月</label>
+        <input type="number" id="f-month" value="1" min="1" max="12" required>
+      </div>
+      <div class="field">
+        <label>日</label>
+        <input type="number" id="f-day" value="1" min="1" max="31" required>
+      </div>
+      <div class="field">
+        <label>時（0–23）</label>
+        <input type="number" id="f-hour" value="12" min="0" max="23" required>
+      </div>
+      <div class="field">
+        <label>分（0–59）</label>
+        <input type="number" id="f-minute" value="0" min="0" max="59">
+      </div>
+      <div class="field">
+        <label>性別</label>
+        <select id="f-gender">
+          <option value="male">男</option>
+          <option value="female">女</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>曆法</label>
+        <select id="f-isLunar">
+          <option value="false">陽曆（西曆）</option>
+          <option value="true">農曆</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-submit" id="btn-calc">排　盤</button>
+      <span class="tip">計算結果純屬算法輸出，僅供研究參考</span>
+    </div>
+  </form>
+</div>
+
+<div id="spinner">正在排盤…</div>
+<div id="error-box"></div>
+<div id="result"></div>
+
+<footer class="site-footer">
+  算法層：Yiqi core · enrichBazi · 版權所有 玲二工作室
+</footer>
+
+</div>
+
+<script src="bundle.js"></script>
+<script>
+// ─── Helpers ───────────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '-'
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+}
+
+function sihuaHtml(starName, sihuaArr) {
+  const map = { '化禄':'禄', '化权':'权', '化科':'科', '化忌':'忌' }
+  if (!sihuaArr) return esc(starName)
+  const sh = sihuaArr.find(x => x.star === starName)
+  if (!sh) return esc(starName)
+  const ch = map[sh.hua] || sh.hua.slice(-1)
+  return `<span class="sihua-${ch}">${esc(starName)}<span class="sihua-tag">${ch}</span></span>`
+}
+
+// ─── Render ────────────────────────────────────────────────────
+function renderChart(chart) {
+  const bz  = chart.bazi
+  const zw  = chart.ziwei
+  const en  = bz.enrichment || {}
+  const z   = bz.siZhu
+  const bi  = bz.birthInfo
+
+  const cy = new Date().getFullYear()
+  const virtualAge = cy - bi.year + 1
+
+  // ── META ──
+  let solarDate = `${bi.year}-${String(bi.month).padStart(2,'0')}-${String(bi.day).padStart(2,'0')} ${String(bi.hour).padStart(2,'0')}:${String(bi.minute).padStart(2,'0')}`
+  let lunarDate = '-'
+  if (zw.lunarDate) {
+    const ld = zw.lunarDate
+    lunarDate = `${ld.year}年 ${ld.monthCn || ''}月${ld.dayCn || ''}`
+  }
+  const mingDizhi = zw.gongs[0]?.dizhi || ''
+  const DIZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+  const shenDizhi = DIZHI[zw.shenGongIndex] || ''
+  const genderLabel = bi.gender === 'male' ? '男' : '女'
+
+  let metaHtml = `
+    <div class="section">
+      <div class="section-head">基本資訊</div>
+      <div class="section-body">
+        <div class="meta-grid">
+          <div class="meta-row"><span class="meta-label">陽曆</span><span class="meta-val mono">${esc(solarDate)}</span></div>
+          <div class="meta-row"><span class="meta-label">農曆</span><span class="meta-val">${esc(lunarDate)}</span></div>
+          <div class="meta-row"><span class="meta-label">性別</span><span class="meta-val">${genderLabel}（${esc(zw.yinYang||'')}）</span></div>
+          <div class="meta-row"><span class="meta-label">五行局</span><span class="meta-val">${esc(zw.wuXingJu?.name||'-')}</span></div>
+          <div class="meta-row"><span class="meta-label">命宮</span><span class="meta-val">${esc(mingDizhi)}宮</span></div>
+          <div class="meta-row"><span class="meta-label">身宮</span><span class="meta-val">${esc(shenDizhi)}宮</span></div>
+          <div class="meta-row"><span class="meta-label">虛歲（${cy}年）</span><span class="meta-val">${virtualAge}歲</span></div>
+        </div>
+      </div>
+    </div>`
+
+  // ── BAZI 4 PILLARS ──
+  const PILLARS = [
+    { key:'year',  label:'年柱' },
+    { key:'month', label:'月柱' },
+    { key:'day',   label:'日柱' },
+    { key:'hour',  label:'時柱' },
+  ]
+  const pillarRows = {
+    header: '<tr>' + PILLARS.map(p => `<th>${p.label}</th>`).join('') + '</tr>',
+    gan: '<tr>' + PILLARS.map(p => `<td><div class="gan-char">${esc(z[p.key].gan)}</div></td>`).join('') + '</tr>',
+    zhi: '<tr>' + PILLARS.map(p => `<td><div class="zhi-char">${esc(z[p.key].zhi)}</div></td>`).join('') + '</tr>',
+    shishen: '<tr>' + PILLARS.map(p => {
+      const ss = bz.shiShen?.[p.key] || (p.key==='day' ? '日主' : '-')
+      const cls = p.key === 'day' ? 'daymaster-tag' : ''
+      return `<td><span class="shishen-tag ${cls}">${esc(ss)}</span></td>`
+    }).join('') + '</tr>',
+    zhangsheng: '<tr>' + PILLARS.map(p => `<td class="small-text">${esc(bz.zhangSheng?.[p.key]||'-')}</td>`).join('') + '</tr>',
+    nayin: '<tr>' + PILLARS.map(p => `<td class="small-text">${esc(bz.naYin?.[p.key]||'-')}</td>`).join('') + '</tr>',
+    canggan: '<tr>' + PILLARS.map(p => {
+      const cg = bz.cangGan?.[p.key] || []
+      const text = cg.map(x => `${x.gan}(${x.shiShen})`).join('<br>')
+      return `<td class="canggan-list">${text || '-'}</td>`
+    }).join('') + '</tr>',
+  }
+
+  const rLabel = (t) => `<tr><th style="text-align:left;background:none;color:var(--ink-faint);font-size:10px;letter-spacing:.04em;width:48px">${t}</th>`
+
+  // Two-column: left=label, remaining 4 cols
+  function makeRow(label, cells) {
+    return `<tr><td style="font-size:10px;color:var(--ink-faint);background:var(--paper-deep);white-space:nowrap;padding:5px 8px">${label}</td>${cells}</tr>`
+  }
+
+  const pillarHtml = `
+    <div class="section">
+      <div class="section-head">八字四柱</div>
+      <div class="section-body" style="overflow-x:auto">
+        <table class="pillar-table">
+          <thead>
+            <tr>
+              <th style="width:48px"></th>
+              ${PILLARS.map(p => `<th>${p.label}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${makeRow('天干', PILLARS.map(p => `<td><div class="gan-char">${esc(z[p.key].gan)}</div></td>`).join(''))}
+            ${makeRow('地支', PILLARS.map(p => `<td><div class="zhi-char">${esc(z[p.key].zhi)}</div></td>`).join(''))}
+            ${makeRow('十神', PILLARS.map(p => {
+              const ss = bz.shiShen?.[p.key] || (p.key==='day' ? '日主' : '-')
+              const cls = p.key === 'day' ? 'daymaster-tag' : ''
+              return `<td><span class="shishen-tag ${cls}">${esc(ss)}</span></td>`
+            }).join(''))}
+            ${makeRow('長生', PILLARS.map(p => `<td class="small-text">${esc(bz.zhangSheng?.[p.key]||'-')}</td>`).join(''))}
+            ${makeRow('自坐', PILLARS.map(p => {
+              const keyMap = {year:'年',month:'月',day:'日',hour:'时'}
+              const val = en.自坐?.[keyMap[p.key]] || '-'
+              return `<td class="small-text">${esc(val)}</td>`
+            }).join(''))}
+            ${makeRow('納音', PILLARS.map(p => `<td class="small-text">${esc(bz.naYin?.[p.key]||'-')}</td>`).join(''))}
+            ${makeRow('藏干', PILLARS.map(p => {
+              const cg = bz.cangGan?.[p.key] || []
+              const text = cg.map(x => `${esc(x.gan)}(${esc(x.shiShen)})`).join('<br>')
+              return `<td class="canggan-list">${text||'-'}</td>`
+            }).join(''))}
+          </tbody>
+        </table>
+      </div>
+    </div>`
+
+  // ── 五行/格局/旺衰 ──
+  const WUXING_KEYS = ['木','火','土','金','水']
+  const wx = en.五行统计?.withCangGan || en.五行统计 || {}
+  const wxMax = Math.max(...WUXING_KEYS.map(k => +wx[k]||0), 1)
+  const yueling = en.五行旺相 || {}
+  const geju = en.格局 || {}
+  const wangshuai = en.旺衰 || {}
+  const tiaohou = en.调候用神 || []
+
+  // 地支关系
+  const zhiRel = en.地支关系 || {}
+  const zhiRelItems = []
+  const relTypes = ['六合','三合','半三合','六冲','三刑','六害','相破','自刑']
+  for (const t of relTypes) {
+    const arr = zhiRel[t] || []
+    for (const item of arr) {
+      zhiRelItems.push(`${t}：${item.zhis||item}`)
+    }
+  }
+
+  const wuxingBarsHtml = WUXING_KEYS.map(k => {
+    const cnt = +wx[k] || 0
+    const pct = Math.round(cnt / wxMax * 100)
+    return `<div class="wuxing-row">
+      <span class="wuxing-name">${k}</span>
+      <div class="wuxing-bar-wrap"><div class="wuxing-bar wx-${k}" style="width:${pct}%"></div></div>
+      <span class="wuxing-count">${cnt}</span>
+      <span class="wuxing-status">${esc(yueling[k]||'')}</span>
+    </div>`
+  }).join('')
+
+  const confHtml = (c) => {
+    if (!c) return ''
+    return `<span class="confidence-dot conf-${c}"></span>${c}`
+  }
+
+  const analyzeHtml = `
+    <div class="section">
+      <div class="section-head">五行 · 格局 · 旺衰</div>
+      <div class="section-body">
+        <div class="core-grid">
+          <div>
+            <div class="core-label">五行統計（含藏干）</div>
+            <div class="wuxing-bars">${wuxingBarsHtml}</div>
+          </div>
+          <div>
+            <div class="core-item" style="margin-bottom:12px">
+              <div class="core-label">格局</div>
+              <div class="core-val">${esc(geju.primary||'-')}</div>
+              <div class="core-sub">${confHtml(geju.confidence)} ${esc(geju.basis||geju.reason||'')}</div>
+            </div>
+            <div class="core-item" style="margin-bottom:12px">
+              <div class="core-label">旺衰</div>
+              <div class="core-val">${esc(wangshuai.verdict||'-')}</div>
+              <div class="core-sub">${confHtml(wangshuai.confidence)} score：${wangshuai.score ?? '-'}</div>
+            </div>
+            <div class="core-item" style="margin-bottom:12px">
+              <div class="core-label">調候用神</div>
+              <div class="core-val">${tiaohou.length ? esc(tiaohou.join('、')) : '-'}</div>
+            </div>
+            ${zhiRelItems.length ? `
+            <div class="core-item">
+              <div class="core-label">地支關係</div>
+              <div class="core-sub" style="line-height:1.8">${zhiRelItems.map(esc).join('<br>')}</div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`
+
+  // ── DAYUN ──
+  const dayunArr = (bz.dayun || []).slice(0, 10)
+  const dayunItemsHtml = dayunArr.map(d => {
+    const isCurrent = d.startAge <= virtualAge && virtualAge <= d.endAge
+    const sg = (d.ganShiShen||'').slice(0,1)
+    const sz = (d.zhiShiShen||'').slice(0,1)
+    return `<div class="dayun-item${isCurrent?' current':''}">
+      ${isCurrent ? '<div class="dayun-cur-label">當前</div>' : ''}
+      <div class="dayun-gz">${esc(d.ganZhi.gan)}${esc(d.ganZhi.zhi)}</div>
+      <div class="dayun-range">${d.startAge}–${d.endAge}歲</div>
+      <div class="dayun-ss">${sg}${sz}</div>
+    </div>`
+  }).join('')
+
+  // current dayun liunian
+  const curDayun = dayunArr.find(d => d.startAge <= virtualAge && virtualAge <= d.endAge)
+  let liunianHtml = ''
+  if (curDayun && curDayun.liuNian && curDayun.liuNian.length) {
+    const lns = curDayun.liuNian.slice(0,10)
+    const rows = lns.map(ln => {
+      const isCurLN = ln.age === virtualAge
+      const ganSS = ln.ganShiShen ? ln.ganShiShen.slice(0,1) : ''
+      const zhiSS = ln.zhiShiShen ? ln.zhiShiShen.slice(0,1) : ''
+      return `<tr${isCurLN?' class="current"':''}>
+        <td>${ln.year}</td>
+        <td>${ln.age}歲</td>
+        <td>${esc(ln.ganZhi.gan)}${esc(ln.ganZhi.zhi)}</td>
+        <td>${ganSS}${zhiSS}</td>
+      </tr>`
+    }).join('')
+    liunianHtml = `
+      <div style="margin-top:16px">
+        <div class="core-label" style="margin-bottom:8px">當前大運（${esc(curDayun.ganZhi.gan)}${esc(curDayun.ganZhi.zhi)} ${curDayun.startAge}–${curDayun.endAge}歲）流年</div>
+        <div style="overflow-x:auto">
+          <table class="liunian-table">
+            <thead><tr><th>公曆</th><th>虛歲</th><th>干支</th><th>十神</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`
+  }
+
+  const dayunHtml = `
+    <div class="section">
+      <div class="section-head">大運（起運 ${bz.dayunStart||'?'}歲）</div>
+      <div class="section-body">
+        <div class="dayun-list">${dayunItemsHtml}</div>
+        ${liunianHtml}
+      </div>
+    </div>`
+
+  // ── ZIWEI 12 GONGS ──
+  // Traditional ring layout (clockwise from bottom-right)
+  // Grid position mapping for 4x4 with 2x2 center hollow
+  // Row0: 巳 午 未 申
+  // Row1: 辰 -- -- 酉
+  // Row2: 卯 -- -- 戌
+  // Row3: 寅 丑 子 亥
+  const GRID_MAP = {
+    // [row, col]
+    '巳':[0,0],'午':[0,1],'未':[0,2],'申':[0,3],
+    '辰':[1,0],              '酉':[1,3],
+    '卯':[2,0],              '戌':[2,3],
+    '寅':[3,0],'丑':[3,1],'子':[3,2],'亥':[3,3],
+  }
+
+  // Build a 4x4 grid of cells (null = center empty)
+  const grid = Array.from({length:4}, () => Array(4).fill(null))
+  const gongMap = {}
+  for (const g of zw.gongs) {
+    gongMap[g.dizhi] = g
+  }
+  for (const [dz, [r,c]] of Object.entries(GRID_MAP)) {
+    grid[r][c] = gongMap[dz] || { dizhi: dz, empty: true }
+  }
+
+  const SHEN_ZHU = {'子':'火星','丑':'天相','寅':'天梁','卯':'天同','辰':'文昌','巳':'天機','午':'火星','未':'天相','申':'天梁','酉':'天同','戌':'文昌','亥':'天機'}
+  const MING_ZHU = {'子':'貪狼','丑':'巨門','寅':'祿存','卯':'文曲','辰':'廉貞','巳':'武曲','午':'破軍','未':'武曲','申':'廉貞','酉':'文曲','戌':'祿存','亥':'巨門'}
+
+  function renderGong(g) {
+    if (!g) return `<div class="palace-cell center-hidden">命盤<br>中宮</div>`
+    const isMing = g.dizhi === mingDizhi
+    const isShen = g.dizhi === shenDizhi
+    const isCurDaxian = g.daXian && g.daXian.startAge <= virtualAge && virtualAge <= g.daXian.endAge
+    let cls = 'palace-cell'
+    if (isMing) cls += ' palace-ming'
+    if (isCurDaxian) cls += ' palace-current'
+
+    const mainStarsHtml = (g.mainStars && g.mainStars.length > 0)
+      ? g.mainStars.map(s => sihuaHtml(s, g.sihua)).join('·')
+      : `<span style="color:var(--ink-faint)">無主星</span>`
+    const auxStarsHtml = (g.auxStars && g.auxStars.length > 0)
+      ? g.auxStars.map(s => sihuaHtml(s, g.sihua)).join('·')
+      : ''
+    const gongName = g.gong ? (g.gong.endsWith('宮') ? g.gong : g.gong+'宮') : g.dizhi
+    const shenBadge = isShen ? '<span class="shen-badge">身</span>' : ''
+    const daxianStr = g.daXian ? `${g.daXian.startAge}–${g.daXian.endAge}歲${isCurDaxian?' ★':''}` : ''
+
+    return `<div class="${cls}">
+      <div class="palace-ganzhi">${esc(g.tiangan||'')}${esc(g.dizhi)}</div>
+      <div class="palace-name">${esc(gongName)}${shenBadge}</div>
+      <div class="palace-main">${mainStarsHtml}</div>
+      ${auxStarsHtml ? `<div class="palace-aux">${auxStarsHtml}</div>` : ''}
+      <div class="palace-daxian">${esc(daxianStr)}</div>
+    </div>`
+  }
+
+  const sihuaList = (zw.sihua4 || []).map(s => `${s.star}${s.hua}`).join('・')
+
+  let gridHtml = `<div class="palace-grid">`
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if ((r===1||r===2) && (c===1||c===2)) {
+        if (r===1 && c===1) {
+          gridHtml += `<div class="palace-cell center-hidden" style="grid-row:2/4;grid-column:2/4">
+            <div style="text-align:center">
+              <div style="font-size:13px;margin-bottom:6px;color:var(--ink-soft)">命主 ${esc(MING_ZHU[mingDizhi]||'-')}</div>
+              <div style="font-size:13px;margin-bottom:6px;color:var(--ink-soft)">身主 ${esc(SHEN_ZHU[shenDizhi]||'-')}</div>
+              ${sihuaList ? `<div style="font-size:11px;color:var(--ink-faint);margin-top:4px">生年四化<br>${esc(sihuaList)}</div>` : ''}
+            </div>
+          </div>`
+        }
+        continue
+      }
+      gridHtml += renderGong(grid[r][c])
+    }
+  }
+  gridHtml += `</div>`
+
+  const ziweiHtml = `
+    <div class="section">
+      <div class="section-head">紫微十二宮</div>
+      <div class="section-body" style="padding:12px">
+        ${gridHtml}
+        <div style="margin-top:10px;font-size:11px;color:var(--ink-faint)">
+          <span style="display:inline-block;width:12px;height:12px;border:2px solid var(--vermillion);margin-right:4px;vertical-align:middle"></span>命宮
+          &nbsp;&nbsp;
+          <span style="background:var(--azure);color:#fff;font-size:9px;padding:0 3px;border-radius:2px">身</span> 身宮
+          &nbsp;&nbsp;
+          <span style="background:#f8f2e0;border:1px solid var(--line-soft);padding:0 4px;font-size:10px">★</span> 當前大限
+        </div>
+      </div>
+    </div>`
+
+  return metaHtml + pillarHtml + analyzeHtml + dayunHtml + ziweiHtml
+}
+
+// ─── Form Submit ───────────────────────────────────────────────
+document.getElementById('birth-form').addEventListener('submit', function(e) {
+  e.preventDefault()
+
+  const year   = parseInt(document.getElementById('f-year').value)
+  const month  = parseInt(document.getElementById('f-month').value)
+  const day    = parseInt(document.getElementById('f-day').value)
+  const hour   = parseInt(document.getElementById('f-hour').value)
+  const minute = parseInt(document.getElementById('f-minute').value)
+  const gender = document.getElementById('f-gender').value
+  const isLunar = document.getElementById('f-isLunar').value === 'true'
+
+  const errBox = document.getElementById('error-box')
+  const spinner = document.getElementById('spinner')
+  const result = document.getElementById('result')
+
+  errBox.style.display = 'none'
+  result.style.display = 'none'
+  spinner.style.display = 'block'
+  document.getElementById('btn-calc').disabled = true
+
+  setTimeout(() => {
+    try {
+      if (!window.BaziCalc) throw new Error('算法模組尚未載入，請重新整理頁面。')
+
+      const birthInfo = { year, month, day, hour, minute, gender, isLunar, timeZone: 8 }
+      const chart = window.BaziCalc.calcFull(birthInfo)
+      result.innerHTML = renderChart(chart)
+      result.style.display = 'block'
+    } catch (err) {
+      errBox.textContent = '排盤失敗：' + (err.message || String(err))
+      errBox.style.display = 'block'
+    } finally {
+      spinner.style.display = 'none'
+      document.getElementById('btn-calc').disabled = false
+    }
+  }, 30)
+})
+</script>
+</body>
+</html>
